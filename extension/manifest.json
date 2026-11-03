@@ -9,21 +9,15 @@
         "models/type.onnx",
         "models/grid.onnx",
         "models/grid.meta.json",
-        "models/motorcycles_b1.onnx",                          
-        "models/motorcycles_b1.meta.json",  
-        "lib/sql-wasm.wasm",
-        "lib/sql-wasm.js",
-        "lib/sql-wasm-wrapper.js",
-        "lib/sql-wasm.mjs",
-        "db/captcha.sqlite",
-        "background_sqlite.js",
+        "models/motorcycles_b1.onnx",
+        "models/motorcycles_b1.meta.json",
         "captcha/phash-browser.js",
-        "libs/onnxruntime-web/**",
-        "captcha/libs/onnxruntime-web/**",
-        "captcha/recaptcha_ai.js"
+        "captcha/recaptcha_ai.js",
+        "libs/onnxruntime-web/**"
       ],
       "matches": [
-        "<all_urls>"
+        "*://*.google.com/*",
+        "*://*.recaptcha.net/*"
       ]
     }
   ],
@@ -33,7 +27,9 @@
         "*://*.google.com/recaptcha/*",
         "*://*.recaptcha.net/recaptcha/*"
       ],
-      "js": ["eventhook/loader.js"],
+      "js": [
+        "eventhook/loader.js"
+      ],
       "run_at": "document_start",
       "all_frames": true,
       "world": "MAIN"
@@ -59,9 +55,7 @@
   },
   "manifest_version": 3,
   "permissions": [
-    "alarms",
     "declarativeNetRequest",
-    "idle",
     "storage"
   ],
   "background": {
@@ -75,9 +69,9 @@
     "default_icon": "icon/16.png",
     "default_popup": "popup.html"
   },
-"host_permissions": [
-  "*://*.google.com/recaptcha/*"
-],
+  "host_permissions": [
+    "*://*.google.com/recaptcha/*"
+  ],
   "minimum_chrome_version": "111",
   "version_name": "0.2.3600"
 }

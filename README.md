@@ -11,18 +11,12 @@ A browser extension that automatically solves reCAPTCHA image challenges using a
 
 ## Installation
 
-### Base extension (Chrome 111+)
+Requires Chrome 111+.
 
 1. Open `chrome://extensions`
 2. Enable **Developer mode** (top-right toggle)
 3. Click **Load unpacked**
 4. Select the `extension/` folder
-
-### WS addon (Chrome 116+)
-
-The WS addon enables WebSocket-based remote control for automated pipelines. It is installed on top of the base extension.
-
-See [`ws-addon/README.md`](ws-addon/README.md) for installation instructions.
 
 ## Configuration
 
@@ -46,15 +40,40 @@ A random 0–300 ms jitter is added to each timeout above every time it fires. T
 2. Each challenge image is perceptually hashed and looked up in the bundled SQLite cache (`db/captcha.sqlite`). Cache hits return the verified answer without running inference.
 3. On a cache miss, the images are passed to two ONNX models running entirely in the browser: `models/type.onnx` determines whether each tile contains the target object (3×3 challenges); `models/grid.onnx` scores each tile position for the correct selection (4×4 challenges).
 4. Matching tiles are clicked via the MAIN-world content script that wraps the page's `addEventListener`.
-5. All encountered images and their answers are saved to IndexedDB and periodically uploaded to `captcharaptor.com` to expand the training dataset for future model improvements.
 
-## Data Collection
+## Changes in this fork
 
-The extension collects anonymized captcha solve data (challenge images, selected tiles, solve outcome) and periodically uploads it to `captcharaptor.com`. This data is used to improve the AI models.
+Forked from [CaptchaRaptor/captchaplugin](https://github.com/CaptchaRaptor/captchaplugin) at commit `6138f62`.
+This fork has no network code of its own: nothing is sent to any server, and no server can send it commands.
 
-- A random 16-character reporting key is generated per browser profile and stored locally. It is not linked to any account.
-- Uploads can be disabled in the **Reports** section of the extension popup.
-- No personally identifiable information is collected.
+### Removed: remote control (WS addon)
+- Deleted the `ws-addon/` folder. It kept a permanent connection to `wss://ws.captcharaptor.com`,
+  took solving tasks from that server, and used the `debugger`, `tabs` and all-sites permissions to
+  solve captchas for third parties with your IP address and Google login.
+- Deleted the `extension/ws/background_ws.js` stub and the WS mode switch in the popup.
+
+### Removed: data uploads
+- Deleted `extension/uploader.js`, which uploaded captcha images, selected tiles and solve results to
+  `captcharaptor.com` every hour and whenever the computer went idle. It was on by default.
+- Removed the random reporting key generated per browser profile.
+- Removed the local IndexedDB image log (`caplog` database) that stored every captcha image for upload.
+- Deleted the Reports page (`reports.html`, `reports.js` and the Reports section of the popup).
+
+### Tightened permissions
+- Dropped the `alarms` and `idle` permissions, which only the uploader used.
+- Bundled files (models, ONNX Runtime, helper scripts) are now exposed only to reCAPTCHA frames on
+  `google.com` and `recaptcha.net`. Upstream exposed them to every website, which also let any site
+  detect the extension.
+- The SQLite database and its library are no longer exposed to web pages; only the background script uses them.
+
+### Cleanup
+- Deleted unused files: `lib/selector.js` and `lib/sql-wasm.mjs`.
+- Removed two unused fetch helpers from `background.js`.
+- Removed the popup link to `captchaplugin.com`.
+
+### Known issues
+- Turning the solver off tries to show grey icons (`icon/16g.png`, `32g`, `48g`, `128g`) that don't exist.
+  This bug is in upstream too.
 
 ## License
 

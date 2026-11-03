@@ -27,16 +27,6 @@
 		return (t ^ -1) >>> 0
 	}
 
-// solvingid lives in the frame's memory (per-document), not in shared per-origin
-// localStorage — so parallel solves in different tabs/windows can't clobber it.
-let SOLVE_ID = null;
-
-function genSolvingId() {
-  try {
-    if (typeof crypto !== 'undefined' && crypto.randomUUID) return crypto.randomUUID();
-  } catch (e) {}
-  return Math.random().toString(36).slice(2, 10) + Date.now().toString(36);
-}
 
 
 
@@ -139,30 +129,6 @@ function lookupViaBackground(args) {
   });
 }
 
-function caplogRPC(op, ...args) {
-  return new Promise((resolve, reject) => {
-    let settled = false;
-    const timer = setTimeout(() => {
-      if (!settled) { settled = true; reject(new Error('caplogRPC timeout: ' + op)); }
-    }, 30000);
-    try {
-      const rid = `${Date.now()}-${Math.random()}`;
-      chrome.runtime.sendMessage([rid, op, ...args], (resp) => {
-        if (chrome.runtime.lastError) {
-          if (!settled) { settled = true; clearTimeout(timer); reject(new Error(chrome.runtime.lastError.message)); }
-          return;
-        }
-        if (settled) return;
-        settled = true;
-        clearTimeout(timer);
-        if (!resp) return reject(new Error('no response from background'));
-        resolve(resp[1]);
-      });
-    } catch (e) {
-      if (!settled) { settled = true; clearTimeout(timer); reject(e); }
-    }
-  });
-}
 
 
 
@@ -411,33 +377,13 @@ if (grid === '3x3') {
   if (!anchor && !box) return;
 
   T = new MutationObserver(muts => {
-    let shouldMarkSolved = false;
-    let isExpired        = false;
+    let isExpired = false;
 
     for (const m of muts) {
       const target = m.target;
 
-
-      if (anchor && anchor.getAttribute('aria-checked') === 'true') {
-        shouldMarkSolved = true;
-      }
-      if (box && box.classList && box.classList.contains('recaptcha-checkbox-checked')) {
-        shouldMarkSolved = true;
-      }
-
-
       if (target && target.classList && target.classList.contains('recaptcha-checkbox-expired')) {
         isExpired = true;
-      }
-    }
-
-    if (shouldMarkSolved) {
-      try {
-        // No solvingid here: this is the anchor frame, which never generated one.
-        // Background resolves the active solvingid for this tab by sender.tab.id.
-        caplogRPC('caplog::markSolved', { ts: Date.now() }).catch(() => {});
-      } catch (e) {
-        try { console.warn('[recaptcha] markSolved error', e); } catch {}
       }
     }
 
@@ -669,10 +615,6 @@ async function ke() {
   if (re) return;                                    
   for (re = !0; w && (we() || xe());) await l(1e3);  
 
-  SOLVE_ID = genSolvingId();
-  // Register this solvingid as active for the tab so the anchor frame's markSolved
-  // (which has no solvingid of its own) can be routed to it by tabId in background.
-  try { await caplogRPC('caplog::beginSolve', { id: SOLVE_ID }); } catch (e) {}
   let prev44Src = null;
 
   while (w) {
@@ -798,54 +740,6 @@ async function ke() {
 
     
     
-    
-    
-    const writeDone = (async () => {
-      try {
-        const solvingid = SOLVE_ID;
-        const stepNo    = window.__recaptchaSteps || 0;
-        const typeLabel = normalizeLabel(extractLabel(e)) || '';
-
-        if (t === 2) {
-
-          const hash = await phash(m[0]);
-          const selected16 = g.data.map(b => (b ? '1' : '0')).join('').padEnd(16, '0').slice(0, 16);
-          await caplogRPC('caplog::put44', { phash: hash, type: typeLabel, solvingid, step: stepNo, selected: selected16 });
-
-
-          const imgB64 = Z(m[0]);
-          await caplogRPC('capimg::put', { phash: hash, img: imgB64 });
-
-        } else {
-
-          let tiles;
-          if (t === 1) {
-            tiles = m;
-          } else {
-            tiles = split3x3(m[0]);
-          }
-          const hashes = await Promise.all(tiles.map(cv => phash(cv)));
-          const rows = hashes.map((h, i) => ({
-            phash: h,
-            type: typeLabel,
-            solvingid,
-            step: stepNo,
-            selected: g.data[i] ? 1 : 0
-          }));
-          if (rows.length) await caplogRPC('caplog::bulk33', rows);
-
-
-          const imgs = tiles.map(cv => ({ phash: null, img: Z(cv) }));
-          for (let i = 0; i < rows.length; i++) imgs[i].phash = rows[i].phash;
-          await caplogRPC('capimg::bulkPut', imgs);
-        }
-      } catch (err) {
-        try { console.warn('[@caplog]', err); } catch {}
-      }
-    })();
-
-    
-    
     const P = t === 2 ? 4 : 3;
     let clickedIdx = [];
 
@@ -902,11 +796,7 @@ async function ke() {
 
     
     if ((!a || !g.data.some(Boolean)) && !forcedDyn33Click) {
-      // Wait for the step write to reach the SW before clicking Verify — otherwise a
-      // pass may navigate the host page away and destroy this frame mid-write, losing
-      // the rows. The write is capped by its own RPC timeout; the delay hides under
-      // the existing verify_delay pause. writeDone swallows its own errors.
-      await Promise.all([writeDone, l(verifyDelay + jitter())]);
+      await l(verifyDelay + jitter());
       _({ action: 'click', selector: '#recaptcha-verify-button' });
       if (isFinalVerifyButton()) {
         incStep(); 
