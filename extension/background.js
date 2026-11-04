@@ -223,6 +223,9 @@ importScripts(chrome.runtime.getURL('background_sqlite.js'));
 
     var ue = {
         "phash::lookup": ([p]) => self.queryPhash(p),
+        "db::status": () => self.dbStatus(),
+        "db::checkUpdate": ([opts]) => self.dbCheckForUpdate(opts || {}),
+        "db::reset": () => self.dbResetToBundled(),
         "settings::get": f,
         "settings::update": ([e]) => E(e),
         "tab::getURL": N,

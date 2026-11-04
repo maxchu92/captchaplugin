@@ -1,0 +1,83 @@
+/* Options page: reuses popup.css tokens and controls, widened to a full page. */
+
+html, body {
+  width: auto;
+  min-height: 100%;
+}
+
+body {
+  display: block;
+  max-height: none;
+  overflow-y: visible;
+  padding: 32px 16px 48px;
+}
+
+main {
+  max-width: 640px;
+  margin: 0 auto;
+}
+
+h1 { font-size: 22px; }
+
+.card {
+  padding: 16px;
+  margin-bottom: 16px;
+}
+.card h2 { margin-bottom: 4px; }
+.card p { margin: 8px 0; line-height: 1.45; }
+.card .divider { margin-bottom: 12px; }
+
+.kv { gap: 12px 16px; }
+.kv label { cursor: pointer; }
+
+a { color: #93c5fd; }
+a:focus-visible, .btn:focus-visible, textarea:focus-visible, input:focus-visible {
+  outline: 2px solid rgba(147,197,253,0.6);
+  outline-offset: 2px;
+}
+
+code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 12px;
+  color: var(--fg);
+}
+
+textarea {
+  display: block;
+  width: 100%;
+  background: #121826;
+  border: 1px solid var(--stroke);
+  color: var(--fg);
+  border-radius: 8px;
+  padding: 8px 10px;
+  font: 13px/1.5 ui-monospace, SFMono-Regular, Menlo, monospace;
+  resize: vertical;
+}
+
+.row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.btn:not(.primary) {
+  background: transparent;
+  color: var(--fg);
+  border: 1px solid var(--stroke);
+}
+.btn:disabled { opacity: .5; cursor: progress; }
+
+.facts {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: 6px 16px;
+  margin: 12px 0 0;
+  font-size: 13px;
+}
+.facts dt { color: var(--muted); }
+.facts dd { margin: 0; overflow-wrap: anywhere; }
+
+.status.ok    { color: var(--ok); }
+.status.error { color: #f87171; }
+.status.info  { color: var(--fg); }

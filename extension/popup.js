@@ -9,6 +9,7 @@ function show(page){
 }
 $('open_timeouts').addEventListener('click', () => show('timeouts'));
 $('back_main_t').addEventListener('click', () => show('main'));
+$('open_options').addEventListener('click', () => chrome.runtime.openOptionsPage());
 
 
 const defaults = {

@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>CaptchaPlugin options</title>
+  <link rel="stylesheet" href="popup.css">
+  <link rel="stylesheet" href="options.css">
+</head>
+<body>
+  <main>
+    <header class="header">
+      <h1>CaptchaPlugin options</h1>
+      <span id="saved" class="small" aria-live="polite"></span>
+    </header>
+
+    <section class="card">
+      <h2>Solver</h2>
+      <hr class="divider">
+      <div class="kv">
+        <label for="enabled">Solver enabled</label>
+        <label class="switch"><input type="checkbox" id="enabled"><span class="slider"></span></label>
+
+        <label for="autoclick">Auto-click the reCAPTCHA checkbox</label>
+        <label class="switch"><input type="checkbox" id="autoclick"><span class="slider"></span></label>
+
+        <label for="images">Solve image challenges</label>
+        <label class="switch"><input type="checkbox" id="images"><span class="slider"></span></label>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>Timeouts</h2>
+      <hr class="divider">
+      <div class="kv">
+        <label for="click_delay">Between tile clicks</label>
+        <span class="unit"><input type="number" id="click_delay" min="0" step="10" placeholder="300"><small>ms</small></span>
+
+        <label for="reveal_delay">Dynamic reveal → click</label>
+        <span class="unit"><input type="number" id="reveal_delay" min="0" step="10" placeholder="850"><small>ms</small></span>
+
+        <label for="verify_delay">Last click → verify</label>
+        <span class="unit"><input type="number" id="verify_delay" min="0" step="10" placeholder="850"><small>ms</small></span>
+      </div>
+      <p class="small help">A random 0–300 ms is added to each timeout. Dynamic reveal counts recognition time already spent.</p>
+    </section>
+
+    <section class="card">
+      <h2>Disabled sites</h2>
+      <hr class="divider">
+      <p class="small">The solver stays off on these sites. One hostname per line, for example <code>example.com</code>.</p>
+      <textarea id="disabled_hosts" rows="5" spellcheck="false" placeholder="example.com"></textarea>
+      <div class="row">
+        <button id="save_hosts" class="btn">Save sites</button>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>Captcha database</h2>
+      <hr class="divider">
+      <p class="small">Known captcha images and their answers, checked before the AI models run. Updates come from
+        <a id="db_source_link" target="_blank" rel="noopener noreferrer">the upstream repository</a> on GitHub.</p>
+      <dl class="facts">
+        <dt>In use</dt>          <dd id="db_active">Loading…</dd>
+        <dt>Entries</dt>         <dd id="db_counts">—</dd>
+        <dt>File</dt>            <dd id="db_file">—</dd>
+        <dt>Last check</dt>      <dd id="db_last_check">Never</dd>
+      </dl>
+      <div class="row">
+        <button id="db_check" class="btn">Check for update</button>
+        <button id="db_install" class="btn primary hidden">Install update</button>
+        <button id="db_reset" class="btn hidden">Use bundled database</button>
+      </div>
+      <p id="db_status" class="small status" aria-live="polite"></p>
+    </section>
+  </main>
+
+  <script type="module" src="options.js"></script>
+</body>
+</html>

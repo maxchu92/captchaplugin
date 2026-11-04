@@ -20,7 +20,7 @@ Requires Chrome 111+.
 
 ## Configuration
 
-Click the extension icon to open the popup. Available settings:
+Click the extension icon to open the popup, or click **All options** there (or right-click the icon and choose **Options**) for the full options page. Available settings:
 
 | Setting | Default | Description |
 |---------|---------|-------------|
@@ -30,9 +30,25 @@ Click the extension icon to open the popup. Available settings:
 | Between tile clicks | 300 ms | Pause between clicking individual tiles (3×3 only) |
 | Dynamic reveal → click | 850 ms | Pause from a new dynamic tile image appearing to clicking it (counts recognition time already spent) |
 | Last click → verify | 850 ms | Pause between the final tile click and pressing Verify |
-| Disabled sites | — | Hostnames where the extension is inactive |
+| Disabled sites | — | Hostnames where the extension is inactive (options page only) |
 
 A random 0–300 ms jitter is added to each timeout above every time it fires. Tiles in a 3×3 challenge are clicked in a randomized order.
+
+### Updating the captcha database
+
+The options page has a **Captcha database** section that shows which database is in use and how many entries it has.
+
+- **Check for update** asks the GitHub API for the latest
+  [`extension/db/captcha.sqlite`](https://github.com/CaptchaRaptor/captchaplugin/blob/main/extension/db/captcha.sqlite)
+  on the upstream `main` branch and compares its checksum with the database in use. Nothing is downloaded at this step.
+- **Install update** appears when upstream has a newer file. It downloads the file from that exact commit,
+  checks it against GitHub's checksum, opens it to make sure it has the expected tables, and only then switches to it.
+  If any step fails, the current database stays in use.
+- **Use bundled database** removes the downloaded copy and goes back to the one shipped in the `extension/` folder.
+
+The downloaded copy is stored in the extension's IndexedDB, because an extension can't overwrite its own files.
+The database holds only image fingerprints and answers; it's read by SQLite and never run as code.
+Its content comes from the upstream authors, so you're trusting them each time you install an update.
 
 ## How It Works
 
@@ -44,7 +60,9 @@ A random 0–300 ms jitter is added to each timeout above every time it fires. T
 ## Changes in this fork
 
 Forked from [CaptchaRaptor/captchaplugin](https://github.com/CaptchaRaptor/captchaplugin) at commit `6138f62`.
-This fork has no network code of its own: nothing is sent to any server, and no server can send it commands.
+Nothing is sent to any server, and no server can send it commands. The only network requests are the ones
+you start with the database update buttons on the options page: read-only requests to `api.github.com` and
+`raw.githubusercontent.com`.
 
 ### Removed: remote control (WS addon)
 - Deleted the `ws-addon/` folder. It kept a permanent connection to `wss://ws.captcharaptor.com`,
@@ -65,6 +83,12 @@ This fork has no network code of its own: nothing is sent to any server, and no 
   `google.com` and `recaptcha.net`. Upstream exposed them to every website, which also let any site
   detect the extension.
 - The SQLite database and its library are no longer exposed to web pages; only the background script uses them.
+
+### Added
+- An options page (`options.html`) with all solver settings, timeouts and a disabled-sites list,
+  opened from **All options** in the popup.
+- Database updates from upstream GitHub on demand, with checksum and table checks before install
+  (see [Updating the captcha database](#updating-the-captcha-database)).
 
 ### Cleanup
 - Deleted unused files: `lib/selector.js` and `lib/sql-wasm.mjs`.
